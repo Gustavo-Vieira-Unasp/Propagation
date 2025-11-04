@@ -1,0 +1,19 @@
+# Build
+[Bb]in/
+[Oo]bj/
+
+# IDE
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Raylib native libs (NÃO comitar!)
+*.dll
+*.so
+*.dylib
+
+# Logs e outros
+*.log
+appsettings.Development.json
