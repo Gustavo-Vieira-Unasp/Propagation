@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Interfaces.Grid;
 using Models.Grid;
-namespace System.Grid;
+namespace GameSystem.Grid;
 
 public class GridSystem
 {
