@@ -78,12 +78,12 @@ public class CameraSystem
         if (Raylib.IsKeyDown(KeyboardKey.Down) || Raylib.IsKeyDown(KeyboardKey.S)) { movement.Y += 1.0f; }
         if (Raylib.IsKeyDown(KeyboardKey.Left) || Raylib.IsKeyDown(KeyboardKey.A)) { movement.X -= 1.0f; }
         if (Raylib.IsKeyDown(KeyboardKey.Right) || Raylib.IsKeyDown(KeyboardKey.D)) { movement.X += 1.0f; }
-        
+
         if (movement != Vector2.Zero)
         {
             movement = Vector2.Normalize(movement);
-            
-            movement *= CameraSpeed * Raylib.GetFrameTime() * 60; 
+
+            movement *= CameraSpeed * Raylib.GetFrameTime() * 60;
             _camera.Target = Vector2.Add(_camera.Target, movement);
         }
 
@@ -97,6 +97,11 @@ public class CameraSystem
         }
 
         LimitCameraTarget();
+    }
+    
+    public void UpdateScreenSize(int newWidth, int newHeight)
+    {
+        _camera.Offset = new Vector2(newWidth / 2f, newHeight / 2f);
     }
     
     public void ResetCamera()
