@@ -4,7 +4,9 @@ using GameSystem.Camera;
 using GameSystem.Grid;
 using GameSystem.State;
 using Views.Grid;
-using Views.UIRender;
+using Views.Renderer.Menu;
+using Views.Renderer.Menu.Game;
+using Views.Renderer.Menu.Resolution;
 namespace Core.Game;
 
 public class GameLoop
@@ -13,34 +15,38 @@ public class GameLoop
     private const int InitialScreenHeight = 800;
     private readonly CameraSystem _cameraSystem;
     private readonly GridSystem _gridSystem = new();
-    private readonly GridRenderer _renderer = new();
+    private readonly GridRenderer _gridRenderer = new();
     private readonly GameStateSystem _gameStateSystem = new();
-    private readonly UIRenderer _uiRenderer;
+    private readonly MainMenuRenderer _mainMenuRenderer;
+    private readonly GameMenuRenderer _gameMenuRenderer;
+    private readonly ResolutionMenuRenderer _resolutionMenuRenderer;
+    private bool _isGamePreloaded = false;
 
     public GameLoop()
     {
         _cameraSystem = new CameraSystem(InitialScreenWidth, InitialScreenHeight);
-        _uiRenderer = new UIRenderer(_gameStateSystem, _cameraSystem);
+        _resolutionMenuRenderer = new ResolutionMenuRenderer(_gameStateSystem, _cameraSystem);
+        _mainMenuRenderer = new MainMenuRenderer(_gameStateSystem, _resolutionMenuRenderer);
+        _gameMenuRenderer = new GameMenuRenderer(_gameStateSystem, _resolutionMenuRenderer);
     }
 
     public void Run()
     {
         Raylib.InitWindow(InitialScreenWidth, InitialScreenHeight, "Propagation - Ver.:0.000.01");
         Raylib.SetTargetFPS(60);
-
         Raylib.SetExitKey(KeyboardKey.Null);
 
-        _gridSystem.GenerateGrid(InitialScreenWidth, InitialScreenHeight);
+        PreoloadAssets(InitialScreenWidth, InitialScreenHeight);
 
         while (!Raylib.WindowShouldClose())
         {
+            HandleSystemInput();
+
             if (_gameStateSystem.CurrentState == GameState.Playing)
             {
                 HandleInput();
                 _cameraSystem.Update();
             }
-
-            HandleSystemInput();
 
             Render();
         }
@@ -48,13 +54,34 @@ public class GameLoop
         Raylib.CloseWindow();
     }
 
+    private void PreoloadAssets(int width, int height)
+    {
+        _gridSystem.GenerateGrid(width, height);
+
+        _isGamePreloaded = true;
+    }
+
     private void HandleSystemInput()
     {
         if (Raylib.IsKeyPressed(KeyboardKey.Escape))
         {
-            _gameStateSystem.CurrentState = (_gameStateSystem.CurrentState == GameState.Playing)
-                ? GameState.Paused
-                : GameState.Playing;
+            if (_gameStateSystem.CurrentState == GameState.Playing)
+            {
+                _gameStateSystem.CurrentState = GameState.Paused;
+            }
+            else if (_gameStateSystem.CurrentState == GameState.Paused)
+            {
+                if (_gameMenuRenderer.HandleEscape())
+                {
+                    return;
+                }
+
+                _gameStateSystem.CurrentState = GameState.Playing;
+            }
+            else if (_gameStateSystem.CurrentState == GameState.MainMenu)
+            {
+                Raylib.CloseWindow();
+            }
         }
     }
 
@@ -78,13 +105,24 @@ public class GameLoop
         Raylib.BeginDrawing();
         Raylib.ClearBackground(Color.Black);
 
-        Raylib.BeginMode2D(_cameraSystem.Camera);
-        _renderer.Draw(_gridSystem.Cells);
-        Raylib.EndMode2D();
+        if (!_isGamePreloaded)
+        {
+            Raylib.DrawText("LOADING...", 100, 100, 30, Color.White);
+        }
+        else if (_gameStateSystem.CurrentState == GameState.MainMenu)
+        {
+            _mainMenuRenderer.Render();
+        }
+        else
+        {
+            Raylib.BeginMode2D(_cameraSystem.Camera);
+            _gridRenderer.Draw(_gridSystem.Cells);
+            Raylib.EndMode2D();
+        }
 
         if (_gameStateSystem.CurrentState == GameState.Paused)
         {
-            _uiRenderer.RenderPauseMenu();
+            _gameMenuRenderer.Render();
         }
 
         Raylib.EndDrawing();
