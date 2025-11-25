@@ -289,6 +289,7 @@ MonoBehaviour:
   _height: 10
   _tilePrefab: {fileID: 8908298781776898579, guid: 4a1503b515d30574180244d033e1b9df, type: 3}
   _cameraTransform: {fileID: 519420032}
+  _gapSize: 0.05
 --- !u!4 &1089283183
 Transform:
   m_ObjectHideFlags: 0
